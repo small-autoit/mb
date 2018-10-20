@@ -1,4 +1,4 @@
-#AutoIt3Wrapper_Au3Check_Parameters=-d -w 1 -w 2 -w 3 -w 4 -w 5 -w 6
+#NoTrayIcon
 #include 'cefau3/cefau3.au3'
 
 ; startup =========================
@@ -13,7 +13,7 @@ global $cef_app = $cef.new('App'), _
 if ($cef.ExecuteProcess($cef_args.__ptr, $cef_app.__ptr) >= 0) then exit
 
 global $width = 1000, $height = 600, $gui_title = 'Mini Browser'
-	$url = 'https://www.google.com/'
+global $url = 'https://www.google.com/'
 
 global $html_dir = @scriptdir & '\app'
 global $toolbar_height = 30
@@ -83,7 +83,7 @@ $cef.CreateBrowser($cef_winfo.__ptr, $toolbar_client.__ptr, _
 
 GUISetOnEvent(-3, '__exit')
 GUIRegisterMsg(0x0005, '__sizing')
-;OnAutoItExitRegister('CefExit') ; ~ force exit
+OnAutoItExitRegister('CefExit') ; ~ force exit
 
 ; main windows loop =========================
 
@@ -91,13 +91,14 @@ CefWndMsg_RunLoop()
 
 ; callback/handler event =========================
 
-func __exit()
+volatile func __exit()
 	GUISetState(@SW_HIDE)
 	CefWndMsg_QuitLoop()
 	exit
 endfunc
 
-func __sizing($h, $m, $w, $l)
+volatile func __sizing($h, $m, $w, $l)
+	#forceref $h, $m, $w, $l
 	if ($toolbar_hwnd and $browser_hwnd) then
 		dllcall('user32', 'bool', 'GetClientRect', 'hwnd', $hMainGUI, 'struct*', $rcGUI)
 		_MoveWindow($toolbar_hwnd, 0, 0, $rcGUI.w, $toolbar_height, 1)
@@ -107,34 +108,33 @@ endfunc
 
 ; toolbar =========================
 
-func toolbar_getLifeSpanHandler()
+volatile func toolbar_getLifeSpanHandler()
 	return $toolbar_lifespan.__ptr
 endfunc
 
-func toolbar_onAfterCreated($browser)
+volatile func toolbar_onAfterCreated($browser)
 	if (not $toolbar_hwnd) then
 		$toolbar_hwnd = $browser.GetHost().GetWindowHandle()
 		_MoveWindow($toolbar_hwnd, 0, 0, $width, $toolbar_height, 1)
 		_ShowWindow($toolbar_hwnd)
 
 		$toolbar_frame = $browser.GetMainFrame()
+		
 		$cef.CreateBrowser($cef_winfo.__ptr, $browser_client.__ptr, $url, $cef_bs.__ptr, null)
-
-		GUISetState(@SW_SHOW)
 	endif
 endfunc
 
 ; browser =========================
 
-func browser_getLifeSpanHandler()
+volatile func browser_getLifeSpanHandler()
 	return $browser_lifespan.__ptr
 endfunc
 
-func browser_getDisplayHandler()
+volatile func browser_getDisplayHandler()
 	return $browser_display.__ptr
 endfunc
 
-func browser_onAfterCreated($browser)
+volatile func browser_onAfterCreated($browser)
 	if (not $browser_hwnd) then
 		$browser_hwnd = $browser.GetHost().GetWindowHandle()
 		_MoveWindow($browser_hwnd, 0, 30, $width, $height - 30, 1)
@@ -142,21 +142,26 @@ func browser_onAfterCreated($browser)
 
 		$main_browser = $browser
 		$main_frame = $browser.GetMainFrame()
+
+		GUISetState(@SW_SHOW)
 	endif
 endfunc
 
-func browser_onTitleChange($browser, $title)
+volatile func browser_onTitleChange($browser, $title)
+	#forceref $browser
 	if ($browser_hwnd) then WinSetTitle($hMainGUI, '', $gui_title & ' :: ' & $title.val)
 endfunc
 
-func browser_onAddressChange($browser, $frame, $url)
+volatile func browser_onAddressChange($browser, $frame, $url)
+	#forceref $browser, $frame
 	if ($toolbar_frame <> 0) then
 		local $code = 'setLink("' & $url.val & '");'
 		$toolbar_frame.ExecuteJS($code)
 	endif
 endfunc
 
-func browser_onFaviconUrlChange($browser, $icon_urls)
+volatile func browser_onFaviconUrlChange($browser, $icon_urls)
+	#forceref $browser
 	if ($toolbar_frame <> 0) then
 		local $code = 'setIcon("' & $icon_urls.read() & '");'
 		$toolbar_frame.ExecuteJS($code)
@@ -165,17 +170,18 @@ endfunc
 
 ; app/v8 =========================
 
-func app_getRenderProcessHandler()
+volatile func app_getRenderProcessHandler()
 	return $app_renderprocess.__ptr
 endfunc
 
-func app_onWebKitInitialized()
+volatile func app_onWebKitInitialized()
 	local $code = fileread($html_dir & '\ext.js')
 	CefRegisterExtension('v8/app', $code, $app_v8.__ptr)
 endfunc
 
 ;              fn name |  this  | a[n] | <ret>  |   err     // a[0] = count; a[N] = param N (count > 0)
-func app_execute($name, $object, $args, $retval, $exception)
+volatile func app_execute($name, $object, $args, $retval, $exception)
+	#forceref $name, $object, $args, $retval, $exception
 
 	if ($main_browser == 0 and $main_frame == 0) then return 0;
 
