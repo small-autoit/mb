@@ -38,13 +38,13 @@
             .url-box {
                 height: 29px;
                 position: relative;
-                margin-left: 120px;
+                margin-left: 140px;
                 margin-right: 60px;
             }
             #urlbox {
                 transition: all 350ms;
                 width: 98%;
-                padding: 5px;
+                padding: 5px 0 5px 5px;
                 cursor: text;
                 font-family: Tahoma;
                 font-size: 0.9em;
@@ -59,8 +59,12 @@
             }
             #urlbox:focus, #urlbox:hover {
                 border: 1px solid rgba(0, 128, 255, 0.7);
-                border-left-width: 3px;
-                border-right-width: 3px;
+                border-width: 1px 4px;
+            }
+            #icon {
+                top: 3px;
+                max-width: 24px;
+                position: absolute;
             }
         </style>
     </head>
@@ -72,7 +76,8 @@
             <a class="button" id="home"></a>
             <a class="button-right" id="settings"></a>
             <a class="button-right" id="bookmarks"></a>
-            <div class="url-box">
+            <img id="icon" oncontextmenu="return false"/>
+            <div class="url-box" oncontextmenu="">
                 <input type="text" id="urlbox"/>
             </div>
         </div>
@@ -109,6 +114,12 @@
                     app.load(urlbox.value);
             };
 
+            var icon = document.getElementById('icon');
+
+            function setIcon(link) {
+                icon.src = link;
+            }
+
             // list links for bookmarks
             var links = ['https://www.google.com/']
             var bookmarks = document.getElementById('bookmarks');
@@ -131,8 +142,8 @@
                 setBookmarks(idx <= -1)
             }
 
-            // check for bookmarks
-            function set(link) {
+            // set link display & check for bookmarks
+            function setLink(link) {
                 urlbox.value = link;
                 setBookmarks(links.indexOf(link) > -1);
             }

@@ -58,6 +58,7 @@ $browser_lifespan.OnAfterCreated = browser_onAfterCreated
 
 $browser_display.OnTitleChange = browser_onTitleChange
 $browser_display.OnAddressChange = browser_onAddressChange
+$browser_display.OnFaviconUrlChange = browser_onFaviconUrlChange
 
 ; =========================
 
@@ -149,7 +150,14 @@ endfunc
 
 func browser_onAddressChange($browser, $frame, $url)
 	if ($toolbar_frame <> 0) then
-		local $code = 'set("' & $url.val & '")'  ;'urlbox.value = "' & $url.val & '"'
+		local $code = 'setLink("' & $url.val & '");'
+		$toolbar_frame.ExecuteJS($code)
+	endif
+endfunc
+
+func browser_onFaviconUrlChange($browser, $icon_urls)
+	if ($toolbar_frame <> 0) then
+		local $code = 'setIcon("' & $icon_urls.read() & '");'
 		$toolbar_frame.ExecuteJS($code)
 	endif
 endfunc
