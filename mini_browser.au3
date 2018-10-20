@@ -1,3 +1,4 @@
+#AutoIt3Wrapper_Au3Check_Parameters=-d -w 1 -w 2 -w 3 -w 4 -w 5 -w 6
 #include 'cefau3/cefau3.au3'
 
 ; startup =========================
@@ -9,7 +10,7 @@ $cef.EnableHighDPISupport()
 global $cef_app = $cef.new('App'), _
 	$cef_args = $cef.new('MainArgs')
 
-;if ($cef.ExecuteProcess($cef_args.__ptr, $cef_app.__ptr) >= 0) then exit
+if ($cef.ExecuteProcess($cef_args.__ptr, $cef_app.__ptr) >= 0) then exit
 
 global $width = 1000, $height = 600, $gui_title = 'Mini Browser'
 	$url = 'https://www.google.com/'
