@@ -72,7 +72,7 @@ $app_renderprocess.OnWebKitInitialized = app_onWebKitInitialized
 
 ; =========================
 
-global $toolbar_hwnd, $browser_hwnd
+global $toolbar_hwnd = 0, $browser_hwnd = 0
 global $main_frame = 0, $main_browser = 0, $toolbar_frame = 0
 global $rcGUI = DllStructCreate('int[2];int w;int h')
 
@@ -91,13 +91,13 @@ CefWndMsg_RunLoop()
 
 ; callback/handler event =========================
 
-volatile func __exit()
+func __exit()
 	GUISetState(@SW_HIDE)
 	CefWndMsg_QuitLoop()
 	exit
 endfunc
 
-volatile func __sizing($h, $m, $w, $l)
+func __sizing($h, $m, $w, $l)
 	#forceref $h, $m, $w, $l
 	if ($toolbar_hwnd and $browser_hwnd) then
 		dllcall('user32', 'bool', 'GetClientRect', 'hwnd', $hMainGUI, 'struct*', $rcGUI)
@@ -113,7 +113,7 @@ volatile func toolbar_getLifeSpanHandler()
 endfunc
 
 volatile func toolbar_onAfterCreated($browser)
-	if (not $toolbar_hwnd) then
+	if ($toolbar_hwnd==0) then
 		$toolbar_hwnd = $browser.GetHost().GetWindowHandle()
 		_MoveWindow($toolbar_hwnd, 0, 0, $width, $toolbar_height, 1)
 		_ShowWindow($toolbar_hwnd)
@@ -121,6 +121,7 @@ volatile func toolbar_onAfterCreated($browser)
 		$toolbar_frame = $browser.GetMainFrame()
 		
 		$cef.CreateBrowser($cef_winfo.__ptr, $browser_client.__ptr, $url, $cef_bs.__ptr, null)
+		sleep(1000)
 	endif
 endfunc
 
@@ -135,7 +136,7 @@ volatile func browser_getDisplayHandler()
 endfunc
 
 volatile func browser_onAfterCreated($browser)
-	if (not $browser_hwnd) then
+	if ($browser_hwnd==0) then
 		$browser_hwnd = $browser.GetHost().GetWindowHandle()
 		_MoveWindow($browser_hwnd, 0, 30, $width, $height - 30, 1)
 		_ShowWindow($browser_hwnd)
