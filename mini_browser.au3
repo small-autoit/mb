@@ -108,52 +108,51 @@ endfunc
 
 ; toolbar =========================
 
-volatile func toolbar_getLifeSpanHandler()
+func toolbar_getLifeSpanHandler()
 	return $toolbar_lifespan.__ptr
 endfunc
 
-volatile func toolbar_onAfterCreated($browser)
+func toolbar_onAfterCreated($browser)
 	if ($toolbar_hwnd==0) then
 		$toolbar_hwnd = $browser.GetHost().GetWindowHandle()
+		$toolbar_frame = $browser.GetMainFrame()
+		
 		_MoveWindow($toolbar_hwnd, 0, 0, $width, $toolbar_height, 1)
 		_ShowWindow($toolbar_hwnd)
 
-		$toolbar_frame = $browser.GetMainFrame()
-		
 		$cef.CreateBrowser($cef_winfo.__ptr, $browser_client.__ptr, $url, $cef_bs.__ptr, null)
-		sleep(1000)
 	endif
 endfunc
 
 ; browser =========================
 
-volatile func browser_getLifeSpanHandler()
+func browser_getLifeSpanHandler()
 	return $browser_lifespan.__ptr
 endfunc
 
-volatile func browser_getDisplayHandler()
+func browser_getDisplayHandler()
 	return $browser_display.__ptr
 endfunc
 
-volatile func browser_onAfterCreated($browser)
+func browser_onAfterCreated($browser)
 	if ($browser_hwnd==0) then
-		$browser_hwnd = $browser.GetHost().GetWindowHandle()
-		_MoveWindow($browser_hwnd, 0, 30, $width, $height - 30, 1)
-		_ShowWindow($browser_hwnd)
-
 		$main_browser = $browser
 		$main_frame = $browser.GetMainFrame()
+		$browser_hwnd = $browser.GetHost().GetWindowHandle()
+
+		_MoveWindow($browser_hwnd, 0, 30, $width, $height - 30, 1)
+		_ShowWindow($browser_hwnd)
 
 		GUISetState(@SW_SHOW)
 	endif
 endfunc
 
-volatile func browser_onTitleChange($browser, $title)
+func browser_onTitleChange($browser, $title)
 	#forceref $browser
 	if ($browser_hwnd) then WinSetTitle($hMainGUI, '', $gui_title & ' :: ' & $title.val)
 endfunc
 
-volatile func browser_onAddressChange($browser, $frame, $url)
+func browser_onAddressChange($browser, $frame, $url)
 	#forceref $browser, $frame
 	if ($toolbar_frame <> 0) then
 		local $code = 'setLink("' & $url.val & '");'
@@ -161,7 +160,7 @@ volatile func browser_onAddressChange($browser, $frame, $url)
 	endif
 endfunc
 
-volatile func browser_onFaviconUrlChange($browser, $icon_urls)
+func browser_onFaviconUrlChange($browser, $icon_urls)
 	#forceref $browser
 	if ($toolbar_frame <> 0) then
 		local $code = 'setIcon("' & $icon_urls.read() & '");'
@@ -171,17 +170,17 @@ endfunc
 
 ; app/v8 =========================
 
-volatile func app_getRenderProcessHandler()
+func app_getRenderProcessHandler()
 	return $app_renderprocess.__ptr
 endfunc
 
-volatile func app_onWebKitInitialized()
+func app_onWebKitInitialized()
 	local $code = fileread($html_dir & '\ext.js')
 	CefRegisterExtension('v8/app', $code, $app_v8.__ptr)
 endfunc
 
 ;              fn name |  this  | a[n] | <ret>  |   err     // a[0] = count; a[N] = param N (count > 0)
-volatile func app_execute($name, $object, $args, $retval, $exception)
+func app_execute($name, $object, $args, $retval, $exception)
 	#forceref $name, $object, $args, $retval, $exception
 
 	if ($main_browser == 0 and $main_frame == 0) then return 0;
