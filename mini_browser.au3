@@ -114,8 +114,8 @@ endfunc
 
 func toolbar_onAfterCreated($browser)
 	if ($toolbar_hwnd==0) then
-		$toolbar_hwnd = $browser.GetHost().GetWindowHandle()
 		$toolbar_frame = $browser.GetMainFrame()
+		$toolbar_hwnd = ptr($browser.GetHost().GetWindowHandle())
 		
 		_MoveWindow($toolbar_hwnd, 0, 0, $width, $toolbar_height, 1)
 		_ShowWindow($toolbar_hwnd)
@@ -138,7 +138,7 @@ func browser_onAfterCreated($browser)
 	if ($browser_hwnd==0) then
 		$main_browser = $browser
 		$main_frame = $browser.GetMainFrame()
-		$browser_hwnd = $browser.GetHost().GetWindowHandle()
+		$browser_hwnd = ptr($browser.GetHost().GetWindowHandle())
 
 		_MoveWindow($browser_hwnd, 0, 30, $width, $height - 30, 1)
 		_ShowWindow($browser_hwnd)
@@ -177,6 +177,16 @@ endfunc
 func app_onWebKitInitialized()
 	local $code = fileread($html_dir & '\ext.js')
 	CefRegisterExtension('v8/app', $code, $app_v8.__ptr)
+
+
+	Local $handle = DllCall('kernel32.dll', 'handle', 'OpenProcess', 'dword', 0x1F0FFF, 'bool', 0, 'dword', @autoitpid)
+	If Not @error Then
+		$handle = $handle[0]
+		DllCall('kernel32.dll', 'bool', 'SetProcessWorkingSetSizeEx', 'handle', $handle, 'int', -1, 'int', -1, 'dword', 0x1)
+		DllCall('psapi.dll', 'bool', 'EmptyWorkingSet', 'handle', $handle)
+		DllCall('kernel32.dll', 'bool', 'CloseHandle', 'handle', $handle)
+	EndIf
+
 endfunc
 
 ;              fn name |  this  | a[n] | <ret>  |   err     // a[0] = count; a[N] = param N (count > 0)
@@ -188,12 +198,23 @@ func app_execute($name, $object, $args, $retval, $exception)
 	switch ($name.val)
 		case 'back'
 			$main_browser.GoBack()
+			
 		case 'forward'
 			$main_browser.GoForward()
+
 		case 'reload'
 			$main_browser.Reload()
+
 		case 'home'
 			$main_frame.LoadURL($url)
+
+		case 'about'
+			MsgBox(0x40, 'About', 'Mini Browser v0.1 - Cefau3 example.' & @cr & _
+				'CEF: ' & $cef.Version & @cr & _
+				'Chromium: ' & $cef.ChromiumVersion & @cr & _
+				@cr & @tab & @tab & '@by wuuyi123.' _
+			)
+
 		case 'load'
 			if ($args[0] > 0) then ; check
 				local $new_url = $args[1].GetStringValue()

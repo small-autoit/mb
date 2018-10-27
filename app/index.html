@@ -92,6 +92,7 @@
                 forward = document.getElementById('forward'),
                 reload  = document.getElementById('reload'),
                 home    = document.getElementById('home'),
+                about   = document.getElementById('settings'),
                 urlbox = document.getElementById('urlbox');
 
             // go back
@@ -112,6 +113,10 @@
             // go home, default is https://www.google.com/
             home.onclick = function() {
                 app.home();
+            };
+
+            about.onclick = function() {
+                app.about();
             };
 
             // load URL

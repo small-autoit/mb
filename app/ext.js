@@ -26,4 +26,10 @@ if (!app) app = {};
 		native function load();
 		load(url);
 	};
+
+	app.about = function() {
+		native function about();
+		about();
+	};
+
 })();
